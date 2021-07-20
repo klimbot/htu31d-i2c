@@ -172,9 +172,9 @@ bool mgos_htu31d_read(struct mgos_htu31d *sensor)
 
   uint16_t hmdty = (hum[0] << 8) + hum[1];
   float humidity = hmdty;
-  humidity *= 125;
-  humidity /= 65536;
-  humidity -= 6;
+  humidity /= 65535.0;
+  humidity *= 100;
+
   sensor->humidity = humidity;
 
   LOG(LL_DEBUG, ("temperature=%.2fC humidity=%.1f%%", sensor->temperature, sensor->humidity));
@@ -202,6 +202,21 @@ float mgos_htu31d_getHumidity(struct mgos_htu31d *sensor)
   }
 
   return sensor->humidity;
+}
+
+bool mgos_htu31d_setHeater(struct mgos_htu31d *sensor, bool state)
+{
+  uint8_t cmd;
+  if (state)
+  {
+    cmd = MGOS_HTU31D_HEATERON;
+  }
+  else
+  {
+    cmd = MGOS_HTU31D_HEATEROFF;
+  }
+
+  return mgos_htu31d_cmd(sensor, cmd);
 }
 
 bool mgos_htu31d_getStats(struct mgos_htu31d *sensor, struct mgos_htu31d_stats *stats)

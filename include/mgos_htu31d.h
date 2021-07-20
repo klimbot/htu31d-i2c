@@ -79,6 +79,11 @@ extern "C"
   float mgos_htu31d_getHumidity(struct mgos_htu31d *sensor);
 
   /*
+ * Turn the built-in heater on or off
+ */
+  bool mgos_htu31d_setHeater(struct mgos_htu31d *sensor, bool state);
+
+  /*
  * Returns the running statistics on the sensor interaction, the user provides
  * a pointer to a `struct mgos_htu31d_stats` object, which is filled in by
  * this call.
