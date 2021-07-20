@@ -41,22 +41,22 @@ extern "C"
  * validity, upon success a new `struct mgos_htu31d` is allocated and
  * returned. If the device could not be found, NULL is returned.
  */
-  struct mgos_htu32d *mgos_htu32d_create(struct mgos_i2c *i2c, uint8_t i2caddr);
+  struct mgos_htu31d *mgos_htu31d_create(struct mgos_i2c *i2c, uint8_t i2caddr);
 
   /*
  * Destroy the data structure associated with a HTU31D device. The reference
- * to the pointer of the `struct mgos_htu32d` has to be provided, and upon
+ * to the pointer of the `struct mgos_htu31d` has to be provided, and upon
  * successful destruction, its associated memory will be freed and the pointer
  * set to NULL.
  */
-  void mgos_htu32d_destroy(struct mgos_htu32d **sensor);
+  void mgos_htu31d_destroy(struct mgos_htu31d **sensor);
 
   /*
  * The sensor will be polled for its temperature and humidity data. If the poll
  * has occured in the last `MGOS_HTU31D_READ_DELAY` seconds, the cached data is
  * used (so as not to repeatedly poll the bus upon subsequent calls).
  */
-  bool mgos_htu32d_read(struct mgos_htu32d *sensor);
+  bool mgos_htu31d_read(struct mgos_htu31d *sensor);
 
   /*
  * The sensor will be polled for its temperature and humidity data. If the poll
@@ -66,7 +66,7 @@ extern "C"
  * The return value is the temperature of the sensor in Celsius, or NAN if no
  * data was found.
  */
-  float mgos_htu32d_getTemperature(struct mgos_htu32d *sensor);
+  float mgos_htu31d_getTemperature(struct mgos_htu31d *sensor);
 
   /*
  * The sensor will be polled for its temperature and humidity data. If the poll
@@ -76,22 +76,22 @@ extern "C"
  * The return value is the humidity of the sensor in percent relative humidity,
  * or NAN if no data was found.
  */
-  float mgos_htu32d_getHumidity(struct mgos_htu32d *sensor);
+  float mgos_htu31d_getHumidity(struct mgos_htu31d *sensor);
 
   /*
  * Returns the running statistics on the sensor interaction, the user provides
- * a pointer to a `struct mgos_htu32d_stats` object, which is filled in by
+ * a pointer to a `struct mgos_htu31d_stats` object, which is filled in by
  * this call.
  *
  * Upon success, true is returned. Otherwise, false is returned, in which case
  * the contents of `stats` is undetermined.
  */
-  bool mgos_htu32d_getStats(struct mgos_htu32d *sensor, struct mgos_htu32d_stats *stats);
+  bool mgos_htu31d_getStats(struct mgos_htu31d *sensor, struct mgos_htu31d_stats *stats);
 
   /*
  * Initialization function for MGOS -- currently a noop.
  */
-  bool mgos_htu32d_i2c_init(void);
+  bool mgos_htu31d_i2c_init(void);
 
 #ifdef __cplusplus
 }
