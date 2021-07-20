@@ -1,6 +1,4 @@
 /*
- * Copyright 2018 Google Inc.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,14 +13,11 @@
  */
 
 #include "mgos.h"
-#include "mgos_htu31df_internal.h"
+#include "mgos_htu31d_internal.h"
 #include "mgos_i2c.h"
 
-// Datasheet:
-// https://cdn-shop.adafruit.com/datasheets/1899_HTU21D.pdf
-
 // Private functions follow
-static bool mgos_htu31df_cmd(struct mgos_htu31df *sensor, uint8_t cmd)
+static bool mgos_htu31d_cmd(struct mgos_htu31d *sensor, uint8_t cmd)
 {
   if (!sensor || !sensor->i2c)
   {
@@ -51,54 +46,58 @@ static uint8_t crc8(const uint8_t *data, int len)
       crc = (crc & 0x80) ? (crc << 1) ^ poly : (crc << 1);
     }
   }
+
+  LOG(LL_DEBUG, ("CRC=0x%02x", crc));
+
   return crc;
 }
 
 // Private functions end
 
 // Public functions follow
-struct mgos_htu31df *mgos_htu31df_create(struct mgos_i2c *i2c, uint8_t i2caddr)
+struct mgos_htu31d *mgos_htu31d_create(struct mgos_i2c *i2c, uint8_t i2caddr)
 {
-  struct mgos_htu31df *sensor;
-  uint8_t version;
+  struct mgos_htu31d *sensor;
+  uint32_t version;
 
   if (!i2c)
   {
     return NULL;
   }
 
-  sensor = calloc(1, sizeof(struct mgos_htu31df));
+  sensor = calloc(1, sizeof(struct mgos_htu31d));
   if (!sensor)
   {
     return NULL;
   }
 
-  memset(sensor, 0, sizeof(struct mgos_htu31df));
+  memset(sensor, 0, sizeof(struct mgos_htu31d));
   sensor->i2caddr = i2caddr;
   sensor->i2c = i2c;
 
-  mgos_htu31df_cmd(sensor, MGOS_HTU31DF_RESET);
-  mgos_usleep(25000);
+  mgos_htu31d_cmd(sensor, MGOS_HTU31D_RESET);
+  mgos_usleep(15000);
 
-  mgos_htu31df_cmd(sensor, MGOS_HTU31DF_READREG);
-  if (!mgos_i2c_read(sensor->i2c, sensor->i2caddr, &version, 1, true))
+  mgos_htu31d_cmd(sensor, MGOS_HTU31D_READREG);
+  if (!mgos_i2c_read(sensor->i2c, sensor->i2caddr, &version, 4, true))
   {
     LOG(LL_ERROR, ("Could not read command"));
     free(sensor);
     return NULL;
   }
-  if (version == 0x02)
+
+  if (version != 0)
   {
-    LOG(LL_INFO, ("HTU31DF created at I2C 0x%02x", i2caddr));
+    LOG(LL_INFO, ("HTU31D serial number %02x created at I2C 0x%02x", version, sensor->i2caddr));
     return sensor;
   }
 
-  LOG(LL_ERROR, ("Failed to create HTU31DF at I2C 0x%02x", i2caddr));
+  LOG(LL_ERROR, ("Failed to create HTU31D at I2C 0x%02x", i2caddr));
   free(sensor);
   return NULL;
 }
 
-void mgos_htu31df_destroy(struct mgos_htu31df **sensor)
+void mgos_htu31d_destroy(struct mgos_htu31d **sensor)
 {
   if (!*sensor)
   {
@@ -110,7 +109,7 @@ void mgos_htu31df_destroy(struct mgos_htu31df **sensor)
   return;
 }
 
-bool mgos_htu31df_read(struct mgos_htu31df *sensor)
+bool mgos_htu31d_read(struct mgos_htu31d *sensor)
 {
   double start = mg_time();
 
@@ -121,20 +120,23 @@ bool mgos_htu31df_read(struct mgos_htu31df *sensor)
 
   sensor->stats.read++;
 
-  if (start - sensor->stats.last_read_time < MGOS_HTU31DF_READ_DELAY)
+  if (start - sensor->stats.last_read_time < MGOS_HTU31D_READ_DELAY)
   {
     sensor->stats.read_success_cached++;
     return true;
   }
 
+  // Trigger the conversion
+  mgos_htu31d_cmd(sensor, MGOS_HTU31D_CONVERSION);
+  mgos_usleep(20000);
+
   // Read out sensor data here
-  //
   uint8_t data[6];
   uint8_t tmp[3];
   uint8_t hum[3];
 
-  mgos_htu31df_cmd(sensor, MGOS_HTU31DF_READTEMPHUM);
-  mgos_usleep(50000);
+  mgos_htu31d_cmd(sensor, MGOS_HTU31D_READTEMPHUM);
+  mgos_usleep(20000);
   if (!mgos_i2c_read(sensor->i2c, sensor->i2caddr, data, 6, true))
   {
     LOG(LL_ERROR, ("Could not read command"));
@@ -157,9 +159,9 @@ bool mgos_htu31df_read(struct mgos_htu31df *sensor)
   uint16_t temp = (tmp[0] << 8) + tmp[1];
   float temperature = temp;
 
-  temperature *= 175.72;
-  temperature /= 65536;
-  temperature -= 46.85;
+  temperature /= 65535.0;
+  temperature *= 165;
+  temperature -= 40;
   sensor->temperature = temperature;
 
   if (hum[2] != crc8(hum, 2))
@@ -182,9 +184,9 @@ bool mgos_htu31df_read(struct mgos_htu31df *sensor)
   return true;
 }
 
-float mgos_htu31df_getTemperature(struct mgos_htu31df *sensor)
+float mgos_htu31d_getTemperature(struct mgos_htu31d *sensor)
 {
-  if (!mgos_htu31df_read(sensor))
+  if (!mgos_htu31d_read(sensor))
   {
     return NAN;
   }
@@ -192,9 +194,9 @@ float mgos_htu31df_getTemperature(struct mgos_htu31df *sensor)
   return sensor->temperature;
 }
 
-float mgos_htu31df_getHumidity(struct mgos_htu31df *sensor)
+float mgos_htu31d_getHumidity(struct mgos_htu31d *sensor)
 {
-  if (!mgos_htu31df_read(sensor))
+  if (!mgos_htu31d_read(sensor))
   {
     return NAN;
   }
@@ -202,18 +204,18 @@ float mgos_htu31df_getHumidity(struct mgos_htu31df *sensor)
   return sensor->humidity;
 }
 
-bool mgos_htu31df_getStats(struct mgos_htu31df *sensor, struct mgos_htu31df_stats *stats)
+bool mgos_htu31d_getStats(struct mgos_htu31d *sensor, struct mgos_htu31d_stats *stats)
 {
   if (!sensor || !stats)
   {
     return false;
   }
 
-  memcpy((void *)stats, (const void *)&sensor->stats, sizeof(struct mgos_htu31df_stats));
+  memcpy((void *)stats, (const void *)&sensor->stats, sizeof(struct mgos_htu31d_stats));
   return true;
 }
 
-bool mgos_htu31df_i2c_init(void)
+bool mgos_htu31d_i2c_init(void)
 {
   return true;
 }

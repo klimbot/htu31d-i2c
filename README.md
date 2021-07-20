@@ -1,6 +1,9 @@
-# HTU31D(F) I2C Driver
+# HTU31D I2C Driver
 
 A Mongoose library for Measurement Specialities HTU31D(F) integrated circuit.
+Adaptation of the [HTU21D library](https://github.com/mongoose-os-libs/htu21df-i2c)
+with timing parameters pulled from the 
+[Adafruit HTU31D library](https://github.com/adafruit/Adafruit_HTU31D)
 
 
 ## Example application
@@ -42,9 +45,3 @@ enum mgos_app_init_result mgos_app_init(void) {
   return MGOS_APP_INIT_SUCCESS;
 }
 ```
-
-# Disclaimer
-
-This project is not an official Google project. It is not supported by Google
-and Google specifically disclaims all warranties as to its quality,
-merchantability, or fitness for a particular purpose.

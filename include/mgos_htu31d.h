@@ -17,15 +17,15 @@
 #include "mgos.h"
 #include "mgos_i2c.h"
 
-#define MGOS_HTU31DF_READ_DELAY (2)
+#define MGOS_HTU31D_READ_DELAY (2)
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-  struct mgos_htu31df;
-  struct mgos_htu31df_stats
+  struct mgos_htu31d;
+  struct mgos_htu31d_stats
   {
     double last_read_time;        // value of mg_time() upon last call to _read()
     uint32_t read;                // calls to _read()
@@ -36,62 +36,62 @@ extern "C"
   };
 
   /*
- * Initialize a HTU31DF on the I2C bus `i2c` at address specified in `i2caddr`
- * parameter (default HTU31DF is on address 0x40). The sensor will be polled for
- * validity, upon success a new `struct mgos_htu31df` is allocated and
+ * Initialize a HTU31D on the I2C bus `i2c` at address specified in `i2caddr`
+ * parameter (default HTU31D is on address 0x40). The sensor will be polled for
+ * validity, upon success a new `struct mgos_htu31d` is allocated and
  * returned. If the device could not be found, NULL is returned.
  */
-  struct mgos_htu31df *mgos_htu31df_create(struct mgos_i2c *i2c, uint8_t i2caddr);
+  struct mgos_htu32d *mgos_htu32d_create(struct mgos_i2c *i2c, uint8_t i2caddr);
 
   /*
- * Destroy the data structure associated with a HTU31DF device. The reference
- * to the pointer of the `struct mgos_htu31df` has to be provided, and upon
+ * Destroy the data structure associated with a HTU31D device. The reference
+ * to the pointer of the `struct mgos_htu32d` has to be provided, and upon
  * successful destruction, its associated memory will be freed and the pointer
  * set to NULL.
  */
-  void mgos_htu31df_destroy(struct mgos_htu31df **sensor);
+  void mgos_htu32d_destroy(struct mgos_htu32d **sensor);
 
   /*
  * The sensor will be polled for its temperature and humidity data. If the poll
- * has occured in the last `MGOS_HTU31DF_READ_DELAY` seconds, the cached data is
+ * has occured in the last `MGOS_HTU31D_READ_DELAY` seconds, the cached data is
  * used (so as not to repeatedly poll the bus upon subsequent calls).
  */
-  bool mgos_htu31df_read(struct mgos_htu31df *sensor);
+  bool mgos_htu32d_read(struct mgos_htu32d *sensor);
 
   /*
  * The sensor will be polled for its temperature and humidity data. If the poll
- * has occured in the last `MGOS_HTU31DF_READ_DELAY` seconds, the cached data is
+ * has occured in the last `MGOS_HTU31D_READ_DELAY` seconds, the cached data is
  * used (so as not to repeatedly poll the bus upon subsequent calls).
  *
  * The return value is the temperature of the sensor in Celsius, or NAN if no
  * data was found.
  */
-  float mgos_htu31df_getTemperature(struct mgos_htu31df *sensor);
+  float mgos_htu32d_getTemperature(struct mgos_htu32d *sensor);
 
   /*
  * The sensor will be polled for its temperature and humidity data. If the poll
- * has occured in the last `MGOS_HTU31DF_READ_DELAY` seconds, the cached data is
+ * has occured in the last `MGOS_HTU31D_READ_DELAY` seconds, the cached data is
  * used (so as not to repeatedly poll the bus upon subsequent calls).
  *
  * The return value is the humidity of the sensor in percent relative humidity,
  * or NAN if no data was found.
  */
-  float mgos_htu31df_getHumidity(struct mgos_htu31df *sensor);
+  float mgos_htu32d_getHumidity(struct mgos_htu32d *sensor);
 
   /*
  * Returns the running statistics on the sensor interaction, the user provides
- * a pointer to a `struct mgos_htu31df_stats` object, which is filled in by
+ * a pointer to a `struct mgos_htu32d_stats` object, which is filled in by
  * this call.
  *
  * Upon success, true is returned. Otherwise, false is returned, in which case
  * the contents of `stats` is undetermined.
  */
-  bool mgos_htu31df_getStats(struct mgos_htu31df *sensor, struct mgos_htu31df_stats *stats);
+  bool mgos_htu32d_getStats(struct mgos_htu32d *sensor, struct mgos_htu32d_stats *stats);
 
   /*
  * Initialization function for MGOS -- currently a noop.
  */
-  bool mgos_htu31df_i2c_init(void);
+  bool mgos_htu32d_i2c_init(void);
 
 #ifdef __cplusplus
 }

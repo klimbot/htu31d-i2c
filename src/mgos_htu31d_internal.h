@@ -1,6 +1,4 @@
 /*
- * Copyright 2018 Google Inc.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,27 +16,28 @@
 
 #include "mgos.h"
 #include "mgos_i2c.h"
-#include "mgos_htu31df.h"
+#include "mgos_htu31d.h"
 #include <math.h>
 
-#define MGOS_HTU31DF_DEFAULT_I2CADDR (0x40)
+#define MGOS_HTU31D_DEFAULT_I2CADDR (0x40)
 
-#define MGOS_HTU31DF_READTEMPHUM (0x00)
-#define MGOS_HTU31DF_HEATERON (0x04)
-#define MGOS_HTU31DF_HEATEROFF (0x02)
-#define MGOS_HTU31DF_READREG (0x0A)
-#define MGOS_HTU31DF_RESET (0x1E)
+#define MGOS_HTU31D_READTEMPHUM (0x00)
+#define MGOS_HTU31D_CONVERSION (0x40)
+#define MGOS_HTU31D_HEATERON (0x04)
+#define MGOS_HTU31D_HEATEROFF (0x02)
+#define MGOS_HTU31D_READREG (0x0A)
+#define MGOS_HTU31D_RESET (0x1E)
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-  struct mgos_htu31df
+  struct mgos_htu31d
   {
     struct mgos_i2c *i2c;
     uint8_t i2caddr;
-    struct mgos_htu31df_stats stats;
+    struct mgos_htu31d_stats stats;
 
     float humidity, temperature;
   };
