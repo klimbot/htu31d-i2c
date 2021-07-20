@@ -88,7 +88,7 @@ struct mgos_htu31d *mgos_htu31d_create(struct mgos_i2c *i2c, uint8_t i2caddr)
 
   if (version != 0)
   {
-    LOG(LL_INFO, ("HTU31D serial number %02x created at I2C 0x%02x", version, sensor->i2caddr));
+    LOG(LL_DEBUG, ("HTU31D serial number %02x created at I2C 0x%02x", version, sensor->i2caddr));
     return sensor;
   }
 
