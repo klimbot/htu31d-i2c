@@ -17,32 +17,28 @@
 #include "mgos_i2c.h"
 
 // Private functions follow
-static bool mgos_htu31d_cmd(struct mgos_htu31d *sensor, uint8_t cmd)
-{
-  if (!sensor || !sensor->i2c)
-  {
+static bool mgos_htu31d_cmd(struct mgos_htu31d *sensor, uint8_t cmd) {
+  if (!sensor || !sensor->i2c) {
     return false;
   }
 
-  if (!mgos_i2c_write(sensor->i2c, sensor->i2caddr, &cmd, 1, true))
-  {
-    LOG(LL_ERROR, ("I2C=0x%02x cmd=%u (0x%02x) write error", sensor->i2caddr, cmd, cmd));
+  if (!mgos_i2c_write(sensor->i2c, sensor->i2caddr, &cmd, 1, true)) {
+    LOG(LL_ERROR,
+        ("I2C=0x%02x cmd=%u (0x%02x) write error", sensor->i2caddr, cmd, cmd));
     return false;
   }
-  LOG(LL_DEBUG, ("I2C=0x%02x cmd=%u (0x%02x) write success", sensor->i2caddr, cmd, cmd));
+  LOG(LL_DEBUG,
+      ("I2C=0x%02x cmd=%u (0x%02x) write success", sensor->i2caddr, cmd, cmd));
   return true;
 }
 
-static uint8_t crc8(const uint8_t *data, int len)
-{
+static uint8_t crc8(const uint8_t *data, int len) {
   const uint8_t poly = 0x31;
   uint8_t crc = 0x00;
 
-  for (int j = len; j; --j)
-  {
+  for (int j = len; j; --j) {
     crc ^= *data++;
-    for (int i = 8; i; --i)
-    {
+    for (int i = 8; i; --i) {
       crc = (crc & 0x80) ? (crc << 1) ^ poly : (crc << 1);
     }
   }
@@ -55,19 +51,16 @@ static uint8_t crc8(const uint8_t *data, int len)
 // Private functions end
 
 // Public functions follow
-struct mgos_htu31d *mgos_htu31d_create(struct mgos_i2c *i2c, uint8_t i2caddr)
-{
+struct mgos_htu31d *mgos_htu31d_create(struct mgos_i2c *i2c, uint8_t i2caddr) {
   struct mgos_htu31d *sensor;
   uint32_t version;
 
-  if (!i2c)
-  {
+  if (!i2c) {
     return NULL;
   }
 
   sensor = calloc(1, sizeof(struct mgos_htu31d));
-  if (!sensor)
-  {
+  if (!sensor) {
     return NULL;
   }
 
@@ -79,16 +72,15 @@ struct mgos_htu31d *mgos_htu31d_create(struct mgos_i2c *i2c, uint8_t i2caddr)
   mgos_usleep(15000);
 
   mgos_htu31d_cmd(sensor, MGOS_HTU31D_READREG);
-  if (!mgos_i2c_read(sensor->i2c, sensor->i2caddr, &version, 4, true))
-  {
+  if (!mgos_i2c_read(sensor->i2c, sensor->i2caddr, &version, 4, true)) {
     LOG(LL_ERROR, ("Could not read command"));
     free(sensor);
     return NULL;
   }
 
-  if (version != 0)
-  {
-    LOG(LL_DEBUG, ("HTU31D serial number %02x created at I2C 0x%02x", version, sensor->i2caddr));
+  if (version != 0) {
+    LOG(LL_DEBUG, ("HTU31D serial number %02lx created at I2C 0x%02x", version,
+                   sensor->i2caddr));
     return sensor;
   }
 
@@ -97,10 +89,8 @@ struct mgos_htu31d *mgos_htu31d_create(struct mgos_i2c *i2c, uint8_t i2caddr)
   return NULL;
 }
 
-void mgos_htu31d_destroy(struct mgos_htu31d **sensor)
-{
-  if (!*sensor)
-  {
+void mgos_htu31d_destroy(struct mgos_htu31d **sensor) {
+  if (!*sensor) {
     return;
   }
 
@@ -109,19 +99,16 @@ void mgos_htu31d_destroy(struct mgos_htu31d **sensor)
   return;
 }
 
-bool mgos_htu31d_read(struct mgos_htu31d *sensor)
-{
+bool mgos_htu31d_read(struct mgos_htu31d *sensor) {
   double start = mg_time();
 
-  if (!sensor || !sensor->i2c)
-  {
+  if (!sensor || !sensor->i2c) {
     return false;
   }
 
   sensor->stats.read++;
 
-  if (start - sensor->stats.last_read_time < MGOS_HTU31D_READ_DELAY)
-  {
+  if (start - sensor->stats.last_read_time < MGOS_HTU31D_READ_DELAY) {
     sensor->stats.read_success_cached++;
     return true;
   }
@@ -137,8 +124,7 @@ bool mgos_htu31d_read(struct mgos_htu31d *sensor)
 
   mgos_htu31d_cmd(sensor, MGOS_HTU31D_READTEMPHUM);
   mgos_usleep(20000);
-  if (!mgos_i2c_read(sensor->i2c, sensor->i2caddr, data, 6, true))
-  {
+  if (!mgos_i2c_read(sensor->i2c, sensor->i2caddr, data, 6, true)) {
     LOG(LL_ERROR, ("Could not read command"));
     return false;
   }
@@ -150,8 +136,7 @@ bool mgos_htu31d_read(struct mgos_htu31d *sensor)
   hum[1] = data[4];
   hum[2] = data[5];
 
-  if (tmp[2] != crc8(data, 2))
-  {
+  if (tmp[2] != crc8(data, 2)) {
     LOG(LL_ERROR, ("CRC error on temperature data"));
     return false;
   }
@@ -164,8 +149,7 @@ bool mgos_htu31d_read(struct mgos_htu31d *sensor)
   temperature -= 40;
   sensor->temperature = temperature;
 
-  if (hum[2] != crc8(hum, 2))
-  {
+  if (hum[2] != crc8(hum, 2)) {
     LOG(LL_ERROR, ("CRC error on temperature data"));
     return false;
   }
@@ -177,61 +161,53 @@ bool mgos_htu31d_read(struct mgos_htu31d *sensor)
 
   sensor->humidity = humidity;
 
-  LOG(LL_DEBUG, ("temperature=%.2fC humidity=%.1f%%", sensor->temperature, sensor->humidity));
+  LOG(LL_DEBUG, ("temperature=%.2fC humidity=%.1f%%", sensor->temperature,
+                 sensor->humidity));
   sensor->stats.read_success++;
   sensor->stats.read_success_usecs += 1000000 * (mg_time() - start);
   sensor->stats.last_read_time = start;
   return true;
 }
 
-float mgos_htu31d_getTemperature(struct mgos_htu31d *sensor)
-{
-  if (!mgos_htu31d_read(sensor))
-  {
+float mgos_htu31d_getTemperature(struct mgos_htu31d *sensor) {
+  if (!mgos_htu31d_read(sensor)) {
     return NAN;
   }
 
   return sensor->temperature;
 }
 
-float mgos_htu31d_getHumidity(struct mgos_htu31d *sensor)
-{
-  if (!mgos_htu31d_read(sensor))
-  {
+float mgos_htu31d_getHumidity(struct mgos_htu31d *sensor) {
+  if (!mgos_htu31d_read(sensor)) {
     return NAN;
   }
 
   return sensor->humidity;
 }
 
-bool mgos_htu31d_setHeater(struct mgos_htu31d *sensor, bool state)
-{
+bool mgos_htu31d_setHeater(struct mgos_htu31d *sensor, bool state) {
   uint8_t cmd;
-  if (state)
-  {
+  if (state) {
     cmd = MGOS_HTU31D_HEATERON;
-  }
-  else
-  {
+  } else {
     cmd = MGOS_HTU31D_HEATEROFF;
   }
 
   return mgos_htu31d_cmd(sensor, cmd);
 }
 
-bool mgos_htu31d_getStats(struct mgos_htu31d *sensor, struct mgos_htu31d_stats *stats)
-{
-  if (!sensor || !stats)
-  {
+bool mgos_htu31d_getStats(struct mgos_htu31d *sensor,
+                          struct mgos_htu31d_stats *stats) {
+  if (!sensor || !stats) {
     return false;
   }
 
-  memcpy((void *)stats, (const void *)&sensor->stats, sizeof(struct mgos_htu31d_stats));
+  memcpy((void *) stats, (const void *) &sensor->stats,
+         sizeof(struct mgos_htu31d_stats));
   return true;
 }
 
-bool mgos_htu31d_i2c_init(void)
-{
+bool mgos_htu31d_i2c_init(void) {
   return true;
 }
 

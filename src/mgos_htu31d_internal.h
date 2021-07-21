@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "mgos.h"
-#include "mgos_i2c.h"
-#include "mgos_htu31d.h"
 #include <math.h>
+#include "mgos.h"
+#include "mgos_htu31d.h"
+#include "mgos_i2c.h"
 
 #define MGOS_HTU31D_DEFAULT_I2CADDR (0x40)
 
@@ -29,18 +29,16 @@
 #define MGOS_HTU31D_RESET (0x1E)
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  struct mgos_htu31d
-  {
-    struct mgos_i2c *i2c;
-    uint8_t i2caddr;
-    struct mgos_htu31d_stats stats;
+struct mgos_htu31d {
+  struct mgos_i2c *i2c;
+  uint8_t i2caddr;
+  struct mgos_htu31d_stats stats;
 
-    float humidity, temperature;
-  };
+  float humidity, temperature;
+};
 
 #ifdef __cplusplus
 }
